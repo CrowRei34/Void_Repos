@@ -9,7 +9,9 @@ revision=1
 # build_style=fetch: xbps-src downloads `distfiles` into the per-package
 # distdir and skips extraction; do_install() reads them from there.
 build_style=fetch
-archs=noarch
+# NOTE: not setting archs=noarch. xbps-src rejects noarch packages with
+# "cannot be built for x86_64" in this container/cross-ish context. ani-cli is
+# a pure bash script, so the resulting x86_64-marked binary runs everywhere.
 hostmakedepends=""
 makedepends=""
 # Runtime dependencies ani-cli cannot function without.
