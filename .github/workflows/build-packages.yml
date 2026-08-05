@@ -26,12 +26,15 @@ jobs:
       - name: Install prerequisites
         # MUST be the first step. libstdc++ is needed by the Node runtime of
         # actions/*. Pin the canonical mirror: some geo mirrors have broken TLS.
+        # Update xbps itself FIRST (it refuses to install other pkgs until it's
+        # updated when there's a format change), then the rest.
         run: |
           rm -f /usr/share/xbps.d/*repository*.conf /etc/xbps.d/*repository*.conf
           mkdir -p /etc/xbps.d
           printf 'repository=https://repo-default.voidlinux.org/current\n'        > /etc/xbps.d/00-repository-main.conf
           printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n' > /etc/xbps.d/05-repository-nonfree.conf
-          xbps-install -Suy || true
+          xbps-install -Suy xbps   # update xbps itself first
+          xbps-install -Suy        # then everything else
           xbps-install -y libstdc++ git
 
       - name: Checkout repo
@@ -82,7 +85,8 @@ jobs:
           mkdir -p /etc/xbps.d
           printf 'repository=https://repo-default.voidlinux.org/current\n'        > /etc/xbps.d/00-repository-main.conf
           printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n' > /etc/xbps.d/05-repository-nonfree.conf
-          xbps-install -Suy || true
+          xbps-install -Suy xbps
+          xbps-install -Suy
           xbps-install -y libstdc++ git
 
       - name: Checkout repo
