@@ -29,15 +29,21 @@ jobs:
         # Update xbps itself FIRST, then the rest.
         # bash: xbps-src shebang is #!/bin/bash but base image only has /bin/sh.
         # sudo + builder user: xbps-src refuses to run as root.
-        # base-chroot: ethereal mode requires it preinstalled on the host.
+        # base-chroot: ethereal mode requires it preinstalled on the host; it
+        # lives in the 'bootstrap' subrepository, so we add it explicitly.
         run: |
           rm -f /usr/share/xbps.d/*repository*.conf /etc/xbps.d/*repository*.conf
           mkdir -p /etc/xbps.d
-          printf 'repository=https://repo-default.voidlinux.org/current\n'        > /etc/xbps.d/00-repository-main.conf
-          printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n' > /etc/xbps.d/05-repository-nonfree.conf
+          printf 'repository=https://repo-default.voidlinux.org/current\n'         > /etc/xbps.d/00-repository-main.conf
+          printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n'  > /etc/xbps.d/05-repository-nonfree.conf
+          printf 'repository=https://repo-default.voidlinux.org/current/bootstrap\n' > /etc/xbps.d/06-repository-bootstrap.conf
           xbps-install -Suy xbps
           xbps-install -Suy
-          xbps-install -y bash libstdc++ git sudo base-chroot
+          # Install deps; ignore 'already installed' (xbps returns nonzero for it).
+          xbps-install -y bash git sudo base-chroot libstdc++ || \
+            xbps-install -y bash git sudo base-chroot libstdc++ 2>/dev/null || true
+          # Verify the critical ones are actually present.
+          xbps-query base-chroot >/dev/null || { echo "base-chroot missing"; exit 1; }
           id builder >/dev/null 2>&1 || useradd -m -s /bin/bash builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
           chmod 0440 /etc/sudoers.d/builder
@@ -100,11 +106,14 @@ jobs:
         run: |
           rm -f /usr/share/xbps.d/*repository*.conf /etc/xbps.d/*repository*.conf
           mkdir -p /etc/xbps.d
-          printf 'repository=https://repo-default.voidlinux.org/current\n'        > /etc/xbps.d/00-repository-main.conf
-          printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n' > /etc/xbps.d/05-repository-nonfree.conf
+          printf 'repository=https://repo-default.voidlinux.org/current\n'         > /etc/xbps.d/00-repository-main.conf
+          printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n'  > /etc/xbps.d/05-repository-nonfree.conf
+          printf 'repository=https://repo-default.voidlinux.org/current/bootstrap\n' > /etc/xbps.d/06-repository-bootstrap.conf
           xbps-install -Suy xbps
           xbps-install -Suy
-          xbps-install -y bash libstdc++ git sudo base-chroot
+          xbps-install -y bash git sudo base-chroot libstdc++ || \
+            xbps-install -y bash git sudo base-chroot libstdc++ 2>/dev/null || true
+          xbps-query base-chroot >/dev/null || { echo "base-chroot missing"; exit 1; }
           id builder >/dev/null 2>&1 || useradd -m -s /bin/bash builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
           chmod 0440 /etc/sudoers.d/builder
