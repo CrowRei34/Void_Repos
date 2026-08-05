@@ -66,6 +66,7 @@ jobs:
         env:
           XBPS_PRIVATE_KEY: ${{ secrets.XBPS_PRIVATE_KEY }}
           XBPS_PASSPHRASE: ${{ secrets.XBPS_PASSPHRASE }}
+        shell: bash
         run: |
           set -euo pipefail
 
