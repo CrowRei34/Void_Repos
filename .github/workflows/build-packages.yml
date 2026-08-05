@@ -41,6 +41,20 @@ jobs:
         run: |
           cp -r srcpkgs/ani-cli ~/void-packages/srcpkgs/
 
+      - name: Install xbps static
+        # ubuntu-latest doesn't ship the xbps userland; xbps-src needs
+        # xbps-remove/create/uchroot/uunshare for binary-bootstrap + builds.
+        run: |
+          wget -q https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
+          mkdir -p xbps-static
+          tar -xf xbps-static-latest.x86_64-musl.tar.xz -C xbps-static
+          echo "$PWD/xbps-static/xbps/usr/bin" >> "$GITHUB_PATH"
+          export PATH="$PWD/xbps-static/xbps/usr/bin:$PATH"
+          xbps-remove --version
+          xbps-create --version
+          xbps-uchroot --version
+          xbps-uunshare --version
+
       - name: Bootstrap and build
         run: |
           cd ~/void-packages
@@ -84,6 +98,20 @@ jobs:
       - name: Copy template
         run: |
           cp -r srcpkgs/librewolf ~/void-packages/srcpkgs/
+
+      - name: Install xbps static
+        # ubuntu-latest doesn't ship the xbps userland; xbps-src needs
+        # xbps-remove/create/uchroot/uunshare for binary-bootstrap + builds.
+        run: |
+          wget -q https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
+          mkdir -p xbps-static
+          tar -xf xbps-static-latest.x86_64-musl.tar.xz -C xbps-static
+          echo "$PWD/xbps-static/xbps/usr/bin" >> "$GITHUB_PATH"
+          export PATH="$PWD/xbps-static/xbps/usr/bin:$PATH"
+          xbps-remove --version
+          xbps-create --version
+          xbps-uchroot --version
+          xbps-uunshare --version
 
       - name: Bootstrap and build
         run: |
