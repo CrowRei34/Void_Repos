@@ -30,7 +30,7 @@ revision=1
 # (meta would skip do_fetch; plain custom style runs our phases.)
 # Solo x86_64 (glibc). Las variantes musl/aarch64 se desactivaron.
 archs="x86_64"
-hostmakedepends="xbps curl tar"
+hostmakedepends="xbps curl bsdtar"
 makedepends=""
 # Runtime depends are carried by the upstream binary package's own metadata.
 depends=""
@@ -88,10 +88,11 @@ do_install() {
 
 	local _pkg="${XBPS_SRCDISTDIR}/${pkgname}-${version}/librewolf-${version}_${revision}.${_archsuffix}.xbps"
 	msg_normal "${pkgname}: extracting upstream binary: ${_pkg##*/}\n"
-	# A .xbps file is a tar archive (zstd/gzip) containing the package payload
-	# (/usr, /etc, ...) plus XBPS metadata files at the root (.plist files).
-	# Extract everything, then drop the metadata so xbps-src regenerates it
-	# cleanly when re-packaging under our own repository.
-	tar -xf "$_pkg" -C "${DESTDIR}"
+	# A .xbps file is a tar archive (default compression: zstd) containing the
+	# package payload (/usr, /etc, ...) plus XBPS metadata files at the root
+	# (.plist files). bsdtar (libarchive) handles XBPS's zstd format reliably;
+	# GNU tar choked with 'Child returned status 2'. After extracting, drop the
+	# metadata so xbps-src regenerates it cleanly when re-packaging.
+	bsdtar -xf "$_pkg" -C "${DESTDIR}"
 	rm -f "${DESTDIR}"/*.plist "${DESTDIR}"/files.plist "${DESTDIR}"/props.plist 2>/dev/null || true
 }
