@@ -1,0 +1,91 @@
+# Template file for 'librewolf'
+#
+# ======================================================================
+#  This template does NOT compile LibreWolf.
+# ======================================================================
+#
+# Background:
+#   * Void Linux does not accept Firefox forks in void-packages
+#     (https://github.com/void-linux/void-packages/issues/44281).
+#   * Building LibreWolf from source is impractical (~3h, ~12GB RAM,
+#     full Firefox toolchain + patches).
+#
+# Approach:
+#   This is a WRAPPER. It downloads the prebuilt XBPS binary published by the
+#   community project https://github.com/index-0/librewolf-void and unpacks its
+#   payload with `xbps-uhelper extract` into our own package destdir. The result
+#   is re-packaged under our repository, so users install it transparently with
+#   `xbps-install librewolf`.
+#
+# Bumping the version:
+#   1. Check the latest release of index-0/librewolf-void.
+#   2. Set `version` and `revision` below to match the upstream tag
+#      "<version>-<revision>" (e.g. 153.0-1).
+#   3. Regenerate the SHA256 of the asset for each architecture and replace
+#      the SKIP entries (recommended, since the binary is third-party).
+pkgname=librewolf
+version=153.0
+revision=1
+# No build_style: we provide do_fetch() + do_install() ourselves.
+# (meta would skip do_fetch; plain custom style runs our phases.)
+archs="x86_64 x86_64-musl aarch64 aarch64-musl"
+hostmakedepends="xbps curl"
+makedepends=""
+# Runtime depends are carried by the upstream binary package's own metadata.
+depends=""
+short_desc="Custom and privacy-focused fork of Firefox"
+maintainer="Repositorios Nk <noreply@example.com>"
+license="MPL-2.0"
+homepage="https://librewolf.net/"
+# Bundled libraries / prebuilt binaries: don't mangle them.
+nostrip=yes
+noshlibprovides=yes
+nodebug=yes
+nopie=yes
+
+# Base URL for upstream prebuilt binaries.
+_upstream_tag="${version}-${revision}"
+_upstream_base="https://github.com/index-0/librewolf-void/releases/download/${_upstream_tag}"
+
+# Download the prebuilt .xbps for the current target architecture.
+do_fetch() {
+	local _archsuffix
+	case "$XBPS_TARGET_MACHINE" in
+		x86_64)       _archsuffix=x86_64 ;;
+		x86_64-musl)  _archsuffix=x86_64-musl ;;
+		aarch64)      _archsuffix=aarch64 ;;
+		aarch64-musl) _archsuffix=aarch64-musl ;;
+		*) msg_error "${pkgname}: unsupported arch '$XBPS_TARGET_MACHINE'\n" ;;
+	esac
+
+	_url="${_upstream_base}/librewolf-${version}_${revision}.${_archsuffix}.xbps"
+	_distdir="${XBPS_SRCDISTDIR}/${pkgname}-${version}"
+	_dst="${_distdir}/librewolf-${version}_${revision}.${_archsuffix}.xbps"
+
+	mkdir -p "$_distdir"
+	msg_normal "${pkgname}: fetching ${_url##*/}\n"
+	# fetch_pkg_resource / curl with retry, skip if already present & valid.
+	if [ ! -s "$_dst" ]; then
+		curl -fL --retry 3 -o "$_dst" "$_url"
+	fi
+}
+
+do_build() {
+	:
+}
+
+# No build: just unpack the upstream XBPS into the destdir.
+do_install() {
+	local _archsuffix
+	case "$XBPS_TARGET_MACHINE" in
+		x86_64)       _archsuffix=x86_64 ;;
+		x86_64-musl)  _archsuffix=x86_64-musl ;;
+		aarch64)      _archsuffix=aarch64 ;;
+		aarch64-musl) _archsuffix=aarch64-musl ;;
+		*) msg_error "${pkgname}: unsupported arch '$XBPS_TARGET_MACHINE'\n" ;;
+	esac
+
+	local _pkg="${XBPS_SRCDISTDIR}/${pkgname}-${version}/librewolf-${version}_${revision}.${_archsuffix}.xbps"
+	msg_normal "${pkgname}: extracting upstream binary: ${_pkg##*/}\n"
+	xbps-uhelper extract "$_pkg" "${DESTDIR}"
+}

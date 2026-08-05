@@ -1,0 +1,171 @@
+name: Build XBPS packages
+
+on:
+  # Compilar cuando se hace push a las ramas principales o se editan los templates.
+  push:
+    branches: [main, master]
+    paths:
+      - 'srcpkgs/**'
+      - '.github/workflows/build-packages.yml'
+  # Compilar manualmente desde la pestaña "Actions".
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Paquetes a construir (separados por espacio). Vacío = todos.'
+        required: false
+        default: ''
+      architectures:
+        description: 'Arquitecturas (separadas por espacio). Vacío = todas las soportadas.'
+        required: false
+        default: ''
+  # Recompilar cada 30 días para mantener frescos los binarios.
+  schedule:
+    - cron: '0 3 1 * *'
+
+jobs:
+  # ---------------------------------------------------------------- ani-cli ----
+  # ani-cli es un script de shell: solo necesita bootstrapear xbps-src y copiar
+  # archivos. Funciona en una sola arquitectura (la del runner, x86_64).
+  build-ani-cli:
+    name: ani-cli (x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Clone void-packages
+        run: |
+          git clone --depth=1 https://github.com/void-linux/void-packages.git ~/void-packages
+
+      - name: Copy template
+        run: |
+          cp -r srcpkgs/ani-cli ~/void-packages/srcpkgs/
+
+      - name: Bootstrap and build
+        run: |
+          cd ~/void-packages
+          ./xbps-src binary-bootstrap x86_64
+          # ani-cli es arch-agnóstico; construimos para x86_64 y los binarios
+          # (arch=noarch en la práctica) sirven para todas las variantes.
+          ./xbps-src pkg ani-cli
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          cp ~/void-packages/hostdir/binpkgs/ani-cli-*.xbps artifacts/ || true
+          ls -la artifacts/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ani-cli-xbps
+          path: artifacts/*.xbps
+          if-no-files-found: error
+          retention-days: 14
+
+  # ------------------------------------------------------------- librewolf ----
+  # librewolf es un wrapper: baja el binario precompilado de index-0/librewolf-void
+  # y lo desempaqueta. Hay que construirlo para las 4 variantes (arquitectura/libc).
+  build-librewolf:
+    name: librewolf (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, x86_64-musl, aarch64, aarch64-musl]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Clone void-packages
+        run: |
+          git clone --depth=1 https://github.com/void-linux/void-packages.git ~/void-packages
+
+      - name: Copy template
+        run: |
+          cp -r srcpkgs/librewolf ~/void-packages/srcpkgs/
+
+      - name: Bootstrap and build
+        run: |
+          cd ~/void-packages
+          ./xbps-src binary-bootstrap ${{ matrix.arch }}
+          ./xbps-src -m ${{ matrix.arch }} pkg librewolf
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          cp ~/void-packages/hostdir/binpkgs-${{ matrix.arch }}/librewolf-*.xbps artifacts/ \
+            || cp ~/void-packages/hostdir/binpkgs/librewolf-*.xbps artifacts/ || true
+          ls -la artifacts/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: librewolf-${{ matrix.arch }}-xbps
+          path: artifacts/*.xbps
+          if-no-files-found: error
+          retention-days: 14
+
+  # ----------------------------------------------- publicar release en GitHub ----
+  release:
+    name: Publish GitHub release
+    needs: [build-ani-cli, build-librewolf]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # necesario para crear/editar releases y subir assets
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+          merge-multiple: false
+
+      - name: Stage all .xbps into one directory
+        run: |
+          mkdir -p repo
+          find all-artifacts -name '*.xbps' -exec cp -v {} repo/ \;
+          ls -la repo/
+
+      - name: Generate repodata
+        # Necesitamos xbps para crear el índice del repositorio.
+        run: |
+          # Descargar el binario estático de xbps (xbps-rindex) de Void.
+          wget -q https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
+          mkdir -p xbps-static
+          tar -xf xbps-static-latest.x86_64-musl.tar.xz -C xbps-static
+          export PATH="$PWD/xbps-static/xbps/usr/bin:$PATH"
+          xbps-rindex --version
+          cd repo
+          # --add agrega los paquetes; se genera <arch>-repodata automáticamente.
+          xbps-rindex --add ./*.xbps
+          ls -la
+
+      - name: Determine release tag
+        id: tag
+        run: |
+          # Tag basado en fecha + commit corto. Si ya existe, lo reutilizamos.
+          TAG="$(date -u +'%Y%m%d-%H%M%S')-${GITHUB_SHA::7}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Packages ${{ steps.tag.outputs.tag }}
+          body: |
+            Paquetes XBPS generados automáticamente desde `${{ github.sha }}`.
+
+            ## Uso
+
+            ```bash
+            sudo tee /etc/xbps.d/20-nk.conf >/dev/null <<EOF
+            repository=${{ github.server_url }}/${{ github.repository }}/releases/latest/download/
+            EOF
+            sudo xbps-install -Su ani-cli librewolf
+            ```
+          files: repo/*
+          generate_release_notes: true
