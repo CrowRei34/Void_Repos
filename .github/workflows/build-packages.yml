@@ -49,9 +49,11 @@ jobs:
       - name: Bootstrap and build
         run: |
           cd ~/void-packages
-          ./xbps-src binary-bootstrap x86_64
-          # ani-cli es arch-agnóstico; construimos para x86_64 y los binarios
-          # (arch=noarch en la práctica) sirven para todas las variantes.
+          # bootstrap del host (x86_64 glibc en ubuntu-latest).
+          # Nota: la vieja forma 'binary-bootstrap <arch>' fue removida;
+          # ahora se usa 'binary-bootstrap' para el host y '-A <arch>' al construir.
+          ./xbps-src binary-bootstrap
+          # ani-cli es arch-agnóstico (noarch).
           ./xbps-src pkg ani-cli
 
       - name: Collect artifacts
@@ -94,7 +96,7 @@ jobs:
       - name: Bootstrap and build
         run: |
           cd ~/void-packages
-          ./xbps-src binary-bootstrap x86_64
+          ./xbps-src binary-bootstrap
           ./xbps-src pkg librewolf
 
       - name: Collect artifacts
