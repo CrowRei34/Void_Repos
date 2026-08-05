@@ -88,5 +88,10 @@ do_install() {
 
 	local _pkg="${XBPS_SRCDISTDIR}/${pkgname}-${version}/librewolf-${version}_${revision}.${_archsuffix}.xbps"
 	msg_normal "${pkgname}: extracting upstream binary: ${_pkg##*/}\n"
-	xbps-uhelper extract "$_pkg" "${DESTDIR}"
+	# A .xbps file is a tar archive (zstd/gzip) containing the package payload
+	# (/usr, /etc, ...) plus XBPS metadata files at the root (.plist files).
+	# Extract everything, then drop the metadata so xbps-src regenerates it
+	# cleanly when re-packaging under our own repository.
+	tar -xf "$_pkg" -C "${DESTDIR}"
+	rm -f "${DESTDIR}"/*.plist "${DESTDIR}"/files.plist "${DESTDIR}"/props.plist 2>/dev/null || true
 }
