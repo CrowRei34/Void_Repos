@@ -1,50 +1,38 @@
 name: Build XBPS packages
 
 on:
-  # Compilar cuando se hace push a las ramas principales o se editan los templates.
   push:
     branches: [main, master]
     paths:
       - 'srcpkgs/**'
       - '.github/workflows/build-packages.yml'
-  # Compilar manualmente desde la pestaña "Actions".
   workflow_dispatch:
-  # Recompilar mensualmente para mantener frescos los binarios.
   schedule:
     - cron: '0 3 1 * *'
 
 jobs:
   # ---------------------------------------------------------------- ani-cli ----
   # ani-cli es un script de shell: solo necesita xbps-src para empaquetarlo.
-  # Construimos dentro de un contenedor Void para tener xbps nativo y los
-  # privilegios de user namespace que xbps-src requiere (ubuntu-latest los niega).
+  # Corremos dentro de un contenedor Void (host Void real) y usamos
+  # XBPS_CHROOT_CMD=ethereal para evitar user namespaces (bloqueados en CI):
+  # ethereal construye directamente en el host del contenedor, sin chroot.
   build-ani-cli:
     name: ani-cli (x86_64)
     runs-on: ubuntu-latest
     container: voidlinux/voidlinux:latest
+    env:
+      XBPS_CHROOT_CMD: ethereal
     steps:
-      - name: Install build prerequisites
-        # MUST be the first step. The actions/* runtime is Node.js, which needs
-        # libstdc++.so.6; the base Void image doesn't ship it. base-chroot is
-        # what xbps-src needs to build inside its chroot.
-        # Rewrite repo config from scratch: some geo mirrors (alpha.de.repo...)
-        # have broken TLS certs. Pin the canonical repo-default.voidlinux.org.
+      - name: Install prerequisites
+        # MUST be the first step. libstdc++ is needed by the Node runtime of
+        # actions/*. Pin the canonical mirror: some geo mirrors have broken TLS.
         run: |
-          set -x
-          # Nuke any pre-existing repo config (geo-selected, possibly broken).
           rm -f /usr/share/xbps.d/*repository*.conf /etc/xbps.d/*repository*.conf
           mkdir -p /etc/xbps.d
-          cat > /etc/xbps.d/00-repository-main.conf <<'EOF'
-repository=https://repo-default.voidlinux.org/current
-EOF
-          cat > /etc/xbps.d/05-repository-nonfree.conf <<'EOF'
-repository=https://repo-default.voidlinux.org/current/nonfree
-EOF
-          cat > /etc/xbps.d/10-repository-multilib.conf <<'EOF'
-repository=https://repo-default.voidlinux.org/current/multilib
-EOF
-          xbps-install -Suy
-          xbps-install -y libstdc++ base-chroot git
+          printf 'repository=https://repo-default.voidlinux.org/current\n'        > /etc/xbps.d/00-repository-main.conf
+          printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n' > /etc/xbps.d/05-repository-nonfree.conf
+          xbps-install -Suy || true
+          xbps-install -y libstdc++ git
 
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -54,10 +42,11 @@ EOF
           git clone --depth=1 https://github.com/void-linux/void-packages.git /tmp/void-packages
 
       - name: Copy template
-        run: |
-          cp -r srcpkgs/ani-cli /tmp/void-packages/srcpkgs/
+        run: cp -r srcpkgs/ani-cli /tmp/void-packages/srcpkgs/
 
       - name: Bootstrap and build
+        # ethereal = build on host, no chroot, no user namespaces.
+        # binary-bootstrap installs base-chroot into the host container.
         run: |
           cd /tmp/void-packages
           ./xbps-src binary-bootstrap
@@ -66,7 +55,7 @@ EOF
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          cp /tmp/void-packages/hostdir/binpkgs/ani-cli-*.xbps artifacts/ || true
+          find /tmp/void-packages/hostdir/binpkgs -name 'ani-cli-*.xbps' -exec cp -v {} artifacts/ \; || true
           ls -la artifacts/
 
       - name: Upload artifacts
@@ -84,24 +73,17 @@ EOF
     name: librewolf (x86_64)
     runs-on: ubuntu-latest
     container: voidlinux/voidlinux:latest
+    env:
+      XBPS_CHROOT_CMD: ethereal
     steps:
-      - name: Install build prerequisites
-        # MUST be the first step (see build-ani-cli for rationale).
+      - name: Install prerequisites
         run: |
-          set -x
           rm -f /usr/share/xbps.d/*repository*.conf /etc/xbps.d/*repository*.conf
           mkdir -p /etc/xbps.d
-          cat > /etc/xbps.d/00-repository-main.conf <<'EOF'
-repository=https://repo-default.voidlinux.org/current
-EOF
-          cat > /etc/xbps.d/05-repository-nonfree.conf <<'EOF'
-repository=https://repo-default.voidlinux.org/current/nonfree
-EOF
-          cat > /etc/xbps.d/10-repository-multilib.conf <<'EOF'
-repository=https://repo-default.voidlinux.org/current/multilib
-EOF
-          xbps-install -Suy
-          xbps-install -y libstdc++ base-chroot git
+          printf 'repository=https://repo-default.voidlinux.org/current\n'        > /etc/xbps.d/00-repository-main.conf
+          printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n' > /etc/xbps.d/05-repository-nonfree.conf
+          xbps-install -Suy || true
+          xbps-install -y libstdc++ git
 
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -111,8 +93,7 @@ EOF
           git clone --depth=1 https://github.com/void-linux/void-packages.git /tmp/void-packages
 
       - name: Copy template
-        run: |
-          cp -r srcpkgs/librewolf /tmp/void-packages/srcpkgs/
+        run: cp -r srcpkgs/librewolf /tmp/void-packages/srcpkgs/
 
       - name: Bootstrap and build
         run: |
@@ -123,7 +104,7 @@ EOF
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          cp /tmp/void-packages/hostdir/binpkgs/librewolf-*.xbps artifacts/ || true
+          find /tmp/void-packages/hostdir/binpkgs -name 'librewolf-*.xbps' -exec cp -v {} artifacts/ \; || true
           ls -la artifacts/
 
       - name: Upload artifacts
@@ -135,15 +116,15 @@ EOF
           retention-days: 14
 
   # ----------------------------------------------- publicar release en GitHub ----
-  # El job de release NO necesita user namespaces (solo xbps-rindex para indexar),
-  # así que puede quedarse en ubuntu-latest con el tarball estático.
+  # El release job no necesita user namespaces (solo xbps-rindex), así que
+  # corre en ubuntu-latest con el tarball estático.
   release:
     name: Publish GitHub release
     needs: [build-ani-cli, build-librewolf]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # necesario para crear/editar releases y subir assets
+      contents: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -164,7 +145,6 @@ EOF
         uses: ./.github/actions/install-xbps
 
       - name: Generate repodata
-        # xbps-rindex --add indexa los paquetes y genera <arch>-repodata.
         run: |
           cd repo
           xbps-rindex --add ./*.xbps
