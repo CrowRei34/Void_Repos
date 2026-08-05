@@ -44,16 +44,7 @@ jobs:
       - name: Install xbps static
         # ubuntu-latest doesn't ship the xbps userland; xbps-src needs
         # xbps-remove/create/uchroot/uunshare for binary-bootstrap + builds.
-        run: |
-          wget -q https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
-          mkdir -p xbps-static
-          tar -xf xbps-static-latest.x86_64-musl.tar.xz -C xbps-static
-          echo "$PWD/xbps-static/xbps/usr/bin" >> "$GITHUB_PATH"
-          export PATH="$PWD/xbps-static/xbps/usr/bin:$PATH"
-          xbps-remove --version
-          xbps-create --version
-          xbps-uchroot --version
-          xbps-uunshare --version
+        uses: ./.github/actions/install-xbps
 
       - name: Bootstrap and build
         run: |
@@ -102,16 +93,7 @@ jobs:
       - name: Install xbps static
         # ubuntu-latest doesn't ship the xbps userland; xbps-src needs
         # xbps-remove/create/uchroot/uunshare for binary-bootstrap + builds.
-        run: |
-          wget -q https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
-          mkdir -p xbps-static
-          tar -xf xbps-static-latest.x86_64-musl.tar.xz -C xbps-static
-          echo "$PWD/xbps-static/xbps/usr/bin" >> "$GITHUB_PATH"
-          export PATH="$PWD/xbps-static/xbps/usr/bin:$PATH"
-          xbps-remove --version
-          xbps-create --version
-          xbps-uchroot --version
-          xbps-uunshare --version
+        uses: ./.github/actions/install-xbps
 
       - name: Bootstrap and build
         run: |
@@ -158,15 +140,13 @@ jobs:
           find all-artifacts -name '*.xbps' -exec cp -v {} repo/ \;
           ls -la repo/
 
+      - name: Install xbps static
+        # Reuse the same composite so xbps-rindex is on PATH for repodata.
+        uses: ./.github/actions/install-xbps
+
       - name: Generate repodata
         # Necesitamos xbps para crear el índice del repositorio.
         run: |
-          # Descargar el binario estático de xbps (xbps-rindex) de Void.
-          wget -q https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
-          mkdir -p xbps-static
-          tar -xf xbps-static-latest.x86_64-musl.tar.xz -C xbps-static
-          export PATH="$PWD/xbps-static/xbps/usr/bin:$PATH"
-          xbps-rindex --version
           cd repo
           # --add agrega los paquetes; se genera <arch>-repodata automáticamente.
           xbps-rindex --add ./*.xbps

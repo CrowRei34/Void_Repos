@@ -1,0 +1,47 @@
+name: Install xbps static
+description: >
+  Downloads the official Void Linux static xbps tarball, extracts it and makes
+  the xbps userland (xbps-install, xbps-remove, xbps-create, xbps-rindex,
+  xbps-uchroot, xbps-uunshare, ...) available on PATH for this and subsequent
+  workflow steps. Used by build/release jobs that run on ubuntu-latest runners,
+  which don't ship the xbps tools.
+
+runs:
+  using: composite
+  steps:
+    - name: Download, extract and expose xbps
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # The xbps static tarball from Void's /static/ directory extracts to
+        # usr/bin/. We don't hardcode the path: we detect it by locating the
+        # xbps-remove binary, which is a reliable indicator. This keeps working
+        # even if the tarball layout changes in the future.
+
+        wget -q https://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz \
+          -O xbps-static.tar.xz
+        mkdir -p xbps-static
+        tar -xf xbps-static.tar.xz -C xbps-static
+
+        # Find the directory containing the xbps executables.
+        BIN_REL="$(find xbps-static -type f -name xbps-remove -print -quit)"
+        if [ -z "$BIN_REL" ]; then
+          echo "::error::xbps-remove not found after extraction. Tarball layout:"
+          find xbps-static -maxdepth 3 -mindepth 1 -print
+          exit 1
+        fi
+        BIN_DIR="$PWD/$(dirname "$BIN_REL")"
+
+        # Expose for this step and for all subsequent steps in the job.
+        echo "$BIN_DIR" >> "$GITHUB_PATH"
+        export PATH="$BIN_DIR:$PATH"
+
+        # Sanity checks: print versions of the tools the build/release steps need.
+        echo "xbps binaries at: $BIN_DIR"
+        xbps-install --version
+        xbps-remove   --version
+        xbps-create   --version
+        xbps-rindex   --version
+        xbps-uchroot  --version
+        xbps-uunshare --version
