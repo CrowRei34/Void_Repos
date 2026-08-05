@@ -27,7 +27,12 @@ jobs:
         # MUST be the first step. The actions/* runtime is Node.js, which needs
         # libstdc++.so.6; the base Void image doesn't ship it. base-chroot is
         # what xbps-src needs to build inside its chroot.
+        # Pin the canonical mirror: some geo mirrors (alpha.de.repo...) have
+        # broken TLS certs and fail with 'SSL certificate subject doesn't match'.
         run: |
+          mkdir -p /etc/xbps.d
+          cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/ 2>/dev/null || true
+          sed -i 's#https://[a-z0-9.-]*repo\.voidlinux\.org#https://repo-default.voidlinux.org#g' /etc/xbps.d/*.conf
           xbps-install -Suy
           xbps-install -y libstdc++ base-chroot git
 
@@ -73,6 +78,9 @@ jobs:
       - name: Install build prerequisites
         # MUST be the first step (see build-ani-cli for rationale).
         run: |
+          mkdir -p /etc/xbps.d
+          cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/ 2>/dev/null || true
+          sed -i 's#https://[a-z0-9.-]*repo\.voidlinux\.org#https://repo-default.voidlinux.org#g' /etc/xbps.d/*.conf
           xbps-install -Suy
           xbps-install -y libstdc++ base-chroot git
 
