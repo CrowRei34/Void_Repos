@@ -59,29 +59,54 @@ jobs:
         run: |
           su - builder -c "cd /tmp/void-packages && ./xbps-src pkg librewolf"
 
-      - name: Index packages
+      - name: Sign, index and export pubkey
+        # Sign every .xbps with the private key (secret), then index the repo
+        # and sign the repodata. Also export the public key so users can trust it.
+        # xbps-rindex is native to the Void container, so no static tarball needed.
+        env:
+          XBPS_PRIVATE_KEY: ${{ secrets.XBPS_PRIVATE_KEY }}
+          XBPS_PASSPHRASE: ${{ secrets.XBPS_PASSPHRASE }}
         run: |
+          # Materialize the private key (optional passphrase from secret).
+          printf '%s\n' "$XBPS_PRIVATE_KEY" > /tmp/privkey.pem
+          chmod 600 /tmp/privkey.pem
           cd /tmp/void-packages/hostdir/binpkgs
-          xbps-rindex -a *.xbps
+
+          # Sign each package (.xbps -> .xbps.sig2).
+          if [ -n "$XBPS_PASSPHRASE" ]; then
+            xbps-rindex --sign-pkg --privkey /tmp/privkey.pem --signedby "CrowRei34" *.xbps
+          else
+            xbps-rindex --sign-pkg --privkey /tmp/privkey.pem *.xbps
+          fi
+
+          # Add packages to the repo index and sign the repodata.
+          xbps-rindex --add *.xbps
+          xbps-rindex --sign --signedby "CrowRei34" --privkey /tmp/privkey.pem .
+
+          # Export the public key so the release ships it for user trust.
+          openssl rsa -in /tmp/privkey.pem -pubout -out pubkey.pem 2>/dev/null || true
+
+          # Clean up the private key.
+          shred -u /tmp/privkey.pem 2>/dev/null || rm -f /tmp/privkey.pem
+
+          echo "=== Final repo contents ==="
           ls -la
 
-      - name: Upload ani-cli artifact
+      - name: Upload repo artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ani-cli-xbps
-          path: /tmp/void-packages/hostdir/binpkgs/ani-cli-*.xbps
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload librewolf artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: librewolf-xbps
-          path: /tmp/void-packages/hostdir/binpkgs/librewolf-*.xbps
+          name: xbps-repo
+          path: |
+            /tmp/void-packages/hostdir/binpkgs/*.xbps
+            /tmp/void-packages/hostdir/binpkgs/*.sig2
+            /tmp/void-packages/hostdir/binpkgs/*-repodata
+            /tmp/void-packages/hostdir/binpkgs/pubkey.pem
           if-no-files-found: error
           retention-days: 14
 
   # ------------------------------------------------------- publish release ----
+  # The build job already signed (.sig2), indexed (-repodata) and exported the
+  # public key. We just stage everything and publish the release.
   release:
     name: Publish GitHub release
     needs: [build]
@@ -90,29 +115,14 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Download all artifacts
+      - name: Download repo artifact
         uses: actions/download-artifact@v4
         with:
-          path: all-artifacts
-          merge-multiple: false
+          name: xbps-repo
+          path: repo
 
-      - name: Stage all .xbps into one directory
-        run: |
-          mkdir -p repo
-          find all-artifacts -name '*.xbps' -exec cp -v {} repo/ \;
-          ls -la repo/
-
-      - name: Install xbps static (for xbps-rindex)
-        uses: ./.github/actions/install-xbps
-
-      - name: Generate repodata
-        run: |
-          cd repo
-          xbps-rindex --add ./*.xbps
-          ls -la
+      - name: Inspect staged repo
+        run: ls -la repo/
 
       - name: Determine release tag
         id: tag
@@ -129,6 +139,15 @@ jobs:
             Paquetes XBPS generados automáticamente desde `${{ github.sha }}`.
 
             ## Uso
+
+            1. Confiar en la clave pública (una sola vez):
+
+            ```bash
+            curl -O ${{ github.server_url }}/${{ github.repository }}/releases/latest/download/pubkey.pem
+            sudo cp pubkey.pem /var/db/xbps/keys/   # o el path que use tu Void
+            ```
+
+            2. Agregar el repo e instalar:
 
             ```bash
             sudo tee /etc/xbps.d/20-nk.conf >/dev/null <<EOF
