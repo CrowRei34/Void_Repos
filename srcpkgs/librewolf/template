@@ -30,7 +30,7 @@ revision=1
 # (meta would skip do_fetch; plain custom style runs our phases.)
 # Solo x86_64 (glibc). Las variantes musl/aarch64 se desactivaron.
 archs="x86_64"
-hostmakedepends="xbps curl bsdtar"
+hostmakedepends="xbps curl tar"
 makedepends=""
 # Runtime depends are carried by the upstream binary package's own metadata.
 depends=""
