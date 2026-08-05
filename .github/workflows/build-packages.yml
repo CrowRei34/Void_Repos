@@ -67,26 +67,61 @@ jobs:
           XBPS_PRIVATE_KEY: ${{ secrets.XBPS_PRIVATE_KEY }}
           XBPS_PASSPHRASE: ${{ secrets.XBPS_PASSPHRASE }}
         run: |
-          # Materialize the private key (optional passphrase from secret).
+          set -euo pipefail
+
+          # --- Validate the secret is present ---
+          if [ -z "${XBPS_PRIVATE_KEY:-}" ]; then
+            echo "::error::Secret XBPS_PRIVATE_KEY is empty or not set."
+            echo "Generate an RSA key (openssl genrsa -out privkey.pem 4096) and"
+            echo "paste the full PEM contents as the XBPS_PRIVATE_KEY secret in"
+            echo "Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          # --- Write the key to disk exactly as stored (multi-line PEM) ---
+          # NOTE: GitHub secrets preserve newlines, so plain redirection works
+          # and is safer than printf for multi-line content.
           printf '%s\n' "$XBPS_PRIVATE_KEY" > /tmp/privkey.pem
           chmod 600 /tmp/privkey.pem
+
+          # --- Diagnostics (size + first/last line only; no key body) ---
+          _bytes=$(wc -c < /tmp/privkey.pem)
+          _head=$(head -n1 /tmp/privkey.pem)
+          _tail=$(tail -n1 /tmp/privkey.pem)
+          echo "privkey size: ${_bytes} bytes"
+          echo "privkey first line: ${_head}"
+          echo "privkey last line:  ${_tail}"
+          if [ "$_bytes" -lt 100 ] || \
+             ! grep -q -- 'PRIVATE KEY' /tmp/privkey.pem; then
+            echo "::error::privkey.pem does not look like a PEM private key."
+            echo "Expected a header like '-----BEGIN ... PRIVATE KEY-----'."
+            echo "Make sure the secret contains the FULL PEM file incl. headers."
+            exit 1
+          fi
+
           cd /tmp/void-packages/hostdir/binpkgs
 
-          # Sign each package (.xbps -> .xbps.sig2).
-          if [ -n "$XBPS_PASSPHRASE" ]; then
+          # --- Verify the key actually parses before signing ---
+          openssl rsa -in /tmp/privkey.pem -check -noout \
+            ${XBPS_PASSPHRASE:+-passin pass:"$XBPS_PASSPHRASE"} \
+            || { echo "::error::openssl could not parse privkey.pem"; exit 1; }
+
+          # --- Sign each package (.xbps -> .xbps.sig2) ---
+          if [ -n "${XBPS_PASSPHRASE:-}" ]; then
             xbps-rindex --sign-pkg --privkey /tmp/privkey.pem --signedby "CrowRei34" *.xbps
           else
             xbps-rindex --sign-pkg --privkey /tmp/privkey.pem *.xbps
           fi
 
-          # Add packages to the repo index and sign the repodata.
+          # --- Add packages to the repo index and sign the repodata ---
           xbps-rindex --add *.xbps
           xbps-rindex --sign --signedby "CrowRei34" --privkey /tmp/privkey.pem .
 
-          # Export the public key so the release ships it for user trust.
-          openssl rsa -in /tmp/privkey.pem -pubout -out pubkey.pem 2>/dev/null || true
+          # --- Export the public key so the release ships it for user trust ---
+          openssl rsa -in /tmp/privkey.pem -pubout -out pubkey.pem \
+            ${XBPS_PASSPHRASE:+-passin pass:"$XBPS_PASSPHRASE"} 2>/dev/null || true
 
-          # Clean up the private key.
+          # --- Clean up the private key ---
           shred -u /tmp/privkey.pem 2>/dev/null || rm -f /tmp/privkey.pem
 
           echo "=== Final repo contents ==="
