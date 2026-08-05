@@ -25,42 +25,53 @@ jobs:
     steps:
       - name: Install prerequisites
         # MUST be the first step. libstdc++ is needed by the Node runtime of
-        # actions/*. Pin the canonical mirror: some geo mirrors have broken TLS.
-        # Update xbps itself FIRST (it refuses to install other pkgs until it's
-        # updated when there's a format change), then the rest.
-        # bash is needed because xbps-src has shebang #!/bin/bash but the base
-        # Void image only ships /bin/sh.
+        # actions/*. Pin the canonical mirror (some geo mirrors have broken TLS).
+        # Update xbps itself FIRST, then the rest.
+        # bash: xbps-src shebang is #!/bin/bash but base image only has /bin/sh.
+        # sudo + builder user: xbps-src refuses to run as root.
         run: |
           rm -f /usr/share/xbps.d/*repository*.conf /etc/xbps.d/*repository*.conf
           mkdir -p /etc/xbps.d
           printf 'repository=https://repo-default.voidlinux.org/current\n'        > /etc/xbps.d/00-repository-main.conf
           printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n' > /etc/xbps.d/05-repository-nonfree.conf
-          xbps-install -Suy xbps   # update xbps itself first
-          xbps-install -Suy        # then everything else
-          xbps-install -y bash libstdc++ git
+          xbps-install -Suy xbps
+          xbps-install -Suy
+          xbps-install -y bash libstdc++ git sudo
+          # xbps-src refuses to run as root -> create unprivileged builder.
+          id builder >/dev/null 2>&1 || useradd -m -s /bin/bash builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+          chmod 0440 /etc/sudoers.d/builder
+          # Shared, fixed workspace both root and builder can write to.
+          mkdir -p /build
+          chown -R builder:builder /build
 
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Clone void-packages
         run: |
-          git clone --depth=1 https://github.com/void-linux/void-packages.git "$HOME/void-packages"
+          git clone --depth=1 https://github.com/void-linux/void-packages.git /build/void-packages
+          chown -R builder:builder /build/void-packages
 
       - name: Copy template
-        run: cp -r srcpkgs/ani-cli "$HOME/void-packages/srcpkgs/"
+        run: cp -r srcpkgs/ani-cli /build/void-packages/srcpkgs/
 
       - name: Bootstrap and build
-        # ethereal = build on host, no chroot, no user namespaces.
-        # binary-bootstrap installs base-chroot into the host container.
+        # Run as unprivileged 'builder'. ethereal = build on host, no chroot,
+        # no user namespaces. binary-bootstrap installs deps into the host
+        # container (needs sudo, which builder has via sudoers.d).
         run: |
-          cd "$HOME/void-packages"
-          ./xbps-src binary-bootstrap
-          ./xbps-src pkg ani-cli
+          sudo -u builder bash -c '
+            export XBPS_CHROOT_CMD=ethereal
+            cd /build/void-packages
+            ./xbps-src binary-bootstrap
+            ./xbps-src pkg ani-cli
+          '
 
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          find "$HOME/void-packages/hostdir/binpkgs" -name 'ani-cli-*.xbps' -exec cp -v {} artifacts/ \; || true
+          find /build/void-packages/hostdir/binpkgs -name 'ani-cli-*.xbps' -exec cp -v {} artifacts/ \; || true
           ls -la artifacts/
 
       - name: Upload artifacts
@@ -89,28 +100,37 @@ jobs:
           printf 'repository=https://repo-default.voidlinux.org/current/nonfree\n' > /etc/xbps.d/05-repository-nonfree.conf
           xbps-install -Suy xbps
           xbps-install -Suy
-          xbps-install -y bash libstdc++ git
+          xbps-install -y bash libstdc++ git sudo
+          id builder >/dev/null 2>&1 || useradd -m -s /bin/bash builder
+          echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
+          chmod 0440 /etc/sudoers.d/builder
+          mkdir -p /build
+          chown -R builder:builder /build
 
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Clone void-packages
         run: |
-          git clone --depth=1 https://github.com/void-linux/void-packages.git "$HOME/void-packages"
+          git clone --depth=1 https://github.com/void-linux/void-packages.git /build/void-packages
+          chown -R builder:builder /build/void-packages
 
       - name: Copy template
-        run: cp -r srcpkgs/librewolf "$HOME/void-packages/srcpkgs/"
+        run: cp -r srcpkgs/librewolf /build/void-packages/srcpkgs/
 
       - name: Bootstrap and build
         run: |
-          cd "$HOME/void-packages"
-          ./xbps-src binary-bootstrap
-          ./xbps-src pkg librewolf
+          sudo -u builder bash -c '
+            export XBPS_CHROOT_CMD=ethereal
+            cd /build/void-packages
+            ./xbps-src binary-bootstrap
+            ./xbps-src pkg librewolf
+          '
 
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          find "$HOME/void-packages/hostdir/binpkgs" -name 'librewolf-*.xbps' -exec cp -v {} artifacts/ \; || true
+          find /build/void-packages/hostdir/binpkgs -name 'librewolf-*.xbps' -exec cp -v {} artifacts/ \; || true
           ls -la artifacts/
 
       - name: Upload artifacts
