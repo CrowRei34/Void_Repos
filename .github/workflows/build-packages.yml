@@ -27,12 +27,22 @@ jobs:
         # MUST be the first step. The actions/* runtime is Node.js, which needs
         # libstdc++.so.6; the base Void image doesn't ship it. base-chroot is
         # what xbps-src needs to build inside its chroot.
-        # Pin the canonical mirror: some geo mirrors (alpha.de.repo...) have
-        # broken TLS certs and fail with 'SSL certificate subject doesn't match'.
+        # Rewrite repo config from scratch: some geo mirrors (alpha.de.repo...)
+        # have broken TLS certs. Pin the canonical repo-default.voidlinux.org.
         run: |
+          set -x
+          # Nuke any pre-existing repo config (geo-selected, possibly broken).
+          rm -f /usr/share/xbps.d/*repository*.conf /etc/xbps.d/*repository*.conf
           mkdir -p /etc/xbps.d
-          cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/ 2>/dev/null || true
-          sed -i 's#https://[a-z0-9.-]*repo\.voidlinux\.org#https://repo-default.voidlinux.org#g' /etc/xbps.d/*.conf
+          cat > /etc/xbps.d/00-repository-main.conf <<'EOF'
+repository=https://repo-default.voidlinux.org/current
+EOF
+          cat > /etc/xbps.d/05-repository-nonfree.conf <<'EOF'
+repository=https://repo-default.voidlinux.org/current/nonfree
+EOF
+          cat > /etc/xbps.d/10-repository-multilib.conf <<'EOF'
+repository=https://repo-default.voidlinux.org/current/multilib
+EOF
           xbps-install -Suy
           xbps-install -y libstdc++ base-chroot git
 
@@ -78,9 +88,18 @@ jobs:
       - name: Install build prerequisites
         # MUST be the first step (see build-ani-cli for rationale).
         run: |
+          set -x
+          rm -f /usr/share/xbps.d/*repository*.conf /etc/xbps.d/*repository*.conf
           mkdir -p /etc/xbps.d
-          cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/ 2>/dev/null || true
-          sed -i 's#https://[a-z0-9.-]*repo\.voidlinux\.org#https://repo-default.voidlinux.org#g' /etc/xbps.d/*.conf
+          cat > /etc/xbps.d/00-repository-main.conf <<'EOF'
+repository=https://repo-default.voidlinux.org/current
+EOF
+          cat > /etc/xbps.d/05-repository-nonfree.conf <<'EOF'
+repository=https://repo-default.voidlinux.org/current/nonfree
+EOF
+          cat > /etc/xbps.d/10-repository-multilib.conf <<'EOF'
+repository=https://repo-default.voidlinux.org/current/multilib
+EOF
           xbps-install -Suy
           xbps-install -y libstdc++ base-chroot git
 
