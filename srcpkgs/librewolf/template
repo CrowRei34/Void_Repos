@@ -28,7 +28,8 @@ version=153.0
 revision=1
 # No build_style: we provide do_fetch() + do_install() ourselves.
 # (meta would skip do_fetch; plain custom style runs our phases.)
-archs="x86_64 x86_64-musl aarch64 aarch64-musl"
+# Solo x86_64 (glibc). Las variantes musl/aarch64 se desactivaron.
+archs="x86_64"
 hostmakedepends="xbps curl"
 makedepends=""
 # Runtime depends are carried by the upstream binary package's own metadata.

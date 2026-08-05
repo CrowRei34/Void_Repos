@@ -30,7 +30,7 @@ Fork de Firefox enfocado en privacidad y seguridad.
 > desempaqueta su contenido con `xbps-uhelper extract` y lo reempaqueta bajo nuestro
 > propio repositorio para que los usuarios puedan instalarlo con `xbps-install librewolf`.
 
-**Arquitecturas soportadas:** `x86_64`, `x86_64-musl`, `aarch64`, `aarch64-musl`.
+**Arquitecturas soportadas:** `x86_64` (glibc). Las variantes musl y aarch64 están desactivadas en el workflow; ani-cli es `noarch`.
 
 ## Uso de los templates localmente
 

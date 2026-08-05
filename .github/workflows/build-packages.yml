@@ -70,14 +70,10 @@ jobs:
 
   # ------------------------------------------------------------- librewolf ----
   # librewolf es un wrapper: baja el binario precompilado de index-0/librewolf-void
-  # y lo desempaqueta. Hay que construirlo para las 4 variantes (arquitectura/libc).
+  # y lo desempaqueta. Solo soportamos x86_64 (glibc).
   build-librewolf:
-    name: librewolf (${{ matrix.arch }})
+    name: librewolf (x86_64)
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        arch: [x86_64, x86_64-musl, aarch64, aarch64-musl]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -98,20 +94,19 @@ jobs:
       - name: Bootstrap and build
         run: |
           cd ~/void-packages
-          ./xbps-src binary-bootstrap ${{ matrix.arch }}
-          ./xbps-src -m ${{ matrix.arch }} pkg librewolf
+          ./xbps-src binary-bootstrap x86_64
+          ./xbps-src pkg librewolf
 
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          cp ~/void-packages/hostdir/binpkgs-${{ matrix.arch }}/librewolf-*.xbps artifacts/ \
-            || cp ~/void-packages/hostdir/binpkgs/librewolf-*.xbps artifacts/ || true
+          cp ~/void-packages/hostdir/binpkgs/librewolf-*.xbps artifacts/ || true
           ls -la artifacts/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: librewolf-${{ matrix.arch }}-xbps
+          name: librewolf-xbps
           path: artifacts/*.xbps
           if-no-files-found: error
           retention-days: 14
