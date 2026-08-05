@@ -9,49 +9,43 @@ on:
       - '.github/workflows/build-packages.yml'
   # Compilar manualmente desde la pestaña "Actions".
   workflow_dispatch:
-    inputs:
-      packages:
-        description: 'Paquetes a construir (separados por espacio). Vacío = todos.'
-        required: false
-        default: ''
-      architectures:
-        description: 'Arquitecturas (separadas por espacio). Vacío = todas las soportadas.'
-        required: false
-        default: ''
-  # Recompilar cada 30 días para mantener frescos los binarios.
+  # Recompilar mensualmente para mantener frescos los binarios.
   schedule:
     - cron: '0 3 1 * *'
 
 jobs:
   # ---------------------------------------------------------------- ani-cli ----
-  # ani-cli es un script de shell: solo necesita bootstrapear xbps-src y copiar
-  # archivos. Funciona en una sola arquitectura (la del runner, x86_64).
+  # ani-cli es un script de shell: solo necesita xbps-src para empaquetarlo.
+  # Construimos dentro de un contenedor Void para tener xbps nativo y los
+  # privilegios de user namespace que xbps-src requiere (ubuntu-latest los niega).
   build-ani-cli:
     name: ani-cli (x86_64)
     runs-on: ubuntu-latest
+    container: voidlinux/voidlinux:latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Install build prerequisites
+        # base-chroot provee el entorno mínimo que xbps-src necesita para
+        # construir dentro del chroot. git para clonar void-packages.
+        run: |
+          xbps-install -Suy || true
+          xbps-install -y base-chroot git
+
       - name: Clone void-packages
         run: |
-          git clone --depth=1 https://github.com/void-linux/void-packages.git ~/void-packages
+          git clone --depth=1 https://github.com/void-linux/void-packages.git /tmp/void-packages
 
       - name: Copy template
         run: |
-          cp -r srcpkgs/ani-cli ~/void-packages/srcpkgs/
-
-      - name: Install xbps static
-        # ubuntu-latest doesn't ship the xbps userland; xbps-src needs
-        # xbps-remove/create/uchroot/uunshare for binary-bootstrap + builds.
-        uses: ./.github/actions/install-xbps
+          cp -r srcpkgs/ani-cli /tmp/void-packages/srcpkgs/
 
       - name: Bootstrap and build
         run: |
-          cd ~/void-packages
-          # bootstrap del host (x86_64 glibc en ubuntu-latest).
-          # Nota: la vieja forma 'binary-bootstrap <arch>' fue removida;
-          # ahora se usa 'binary-bootstrap' para el host y '-A <arch>' al construir.
+          cd /tmp/void-packages
+          # Dentro del contenedor Void, como root, xbps-src puede usar
+          # xbps-uchroot sin problemas de /proc/self/uid_map.
           ./xbps-src binary-bootstrap
           # ani-cli es arch-agnóstico (noarch).
           ./xbps-src pkg ani-cli
@@ -59,7 +53,7 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          cp ~/void-packages/hostdir/binpkgs/ani-cli-*.xbps artifacts/ || true
+          cp /tmp/void-packages/hostdir/binpkgs/ani-cli-*.xbps artifacts/ || true
           ls -la artifacts/
 
       - name: Upload artifacts
@@ -76,33 +70,34 @@ jobs:
   build-librewolf:
     name: librewolf (x86_64)
     runs-on: ubuntu-latest
+    container: voidlinux/voidlinux:latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Install build prerequisites
+        run: |
+          xbps-install -Suy || true
+          xbps-install -y base-chroot git
+
       - name: Clone void-packages
         run: |
-          git clone --depth=1 https://github.com/void-linux/void-packages.git ~/void-packages
+          git clone --depth=1 https://github.com/void-linux/void-packages.git /tmp/void-packages
 
       - name: Copy template
         run: |
-          cp -r srcpkgs/librewolf ~/void-packages/srcpkgs/
-
-      - name: Install xbps static
-        # ubuntu-latest doesn't ship the xbps userland; xbps-src needs
-        # xbps-remove/create/uchroot/uunshare for binary-bootstrap + builds.
-        uses: ./.github/actions/install-xbps
+          cp -r srcpkgs/librewolf /tmp/void-packages/srcpkgs/
 
       - name: Bootstrap and build
         run: |
-          cd ~/void-packages
+          cd /tmp/void-packages
           ./xbps-src binary-bootstrap
           ./xbps-src pkg librewolf
 
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
-          cp ~/void-packages/hostdir/binpkgs/librewolf-*.xbps artifacts/ || true
+          cp /tmp/void-packages/hostdir/binpkgs/librewolf-*.xbps artifacts/ || true
           ls -la artifacts/
 
       - name: Upload artifacts
@@ -114,6 +109,8 @@ jobs:
           retention-days: 14
 
   # ----------------------------------------------- publicar release en GitHub ----
+  # El job de release NO necesita user namespaces (solo xbps-rindex para indexar),
+  # así que puede quedarse en ubuntu-latest con el tarball estático.
   release:
     name: Publish GitHub release
     needs: [build-ani-cli, build-librewolf]
@@ -137,22 +134,19 @@ jobs:
           find all-artifacts -name '*.xbps' -exec cp -v {} repo/ \;
           ls -la repo/
 
-      - name: Install xbps static
-        # Reuse the same composite so xbps-rindex is on PATH for repodata.
+      - name: Install xbps static (for xbps-rindex)
         uses: ./.github/actions/install-xbps
 
       - name: Generate repodata
-        # Necesitamos xbps para crear el índice del repositorio.
+        # xbps-rindex --add indexa los paquetes y genera <arch>-repodata.
         run: |
           cd repo
-          # --add agrega los paquetes; se genera <arch>-repodata automáticamente.
           xbps-rindex --add ./*.xbps
           ls -la
 
       - name: Determine release tag
         id: tag
         run: |
-          # Tag basado en fecha + commit corto. Si ya existe, lo reutilizamos.
           TAG="$(date -u +'%Y%m%d-%H%M%S')-${GITHUB_SHA::7}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
