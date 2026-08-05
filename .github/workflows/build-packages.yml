@@ -23,15 +23,16 @@ jobs:
     runs-on: ubuntu-latest
     container: voidlinux/voidlinux:latest
     steps:
+      - name: Install build prerequisites
+        # MUST be the first step. The actions/* runtime is Node.js, which needs
+        # libstdc++.so.6; the base Void image doesn't ship it. base-chroot is
+        # what xbps-src needs to build inside its chroot.
+        run: |
+          xbps-install -Suy
+          xbps-install -y libstdc++ base-chroot git
+
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Install build prerequisites
-        # base-chroot provee el entorno mínimo que xbps-src necesita para
-        # construir dentro del chroot. git para clonar void-packages.
-        run: |
-          xbps-install -Suy || true
-          xbps-install -y base-chroot git
 
       - name: Clone void-packages
         run: |
@@ -44,10 +45,7 @@ jobs:
       - name: Bootstrap and build
         run: |
           cd /tmp/void-packages
-          # Dentro del contenedor Void, como root, xbps-src puede usar
-          # xbps-uchroot sin problemas de /proc/self/uid_map.
           ./xbps-src binary-bootstrap
-          # ani-cli es arch-agnóstico (noarch).
           ./xbps-src pkg ani-cli
 
       - name: Collect artifacts
@@ -72,13 +70,14 @@ jobs:
     runs-on: ubuntu-latest
     container: voidlinux/voidlinux:latest
     steps:
+      - name: Install build prerequisites
+        # MUST be the first step (see build-ani-cli for rationale).
+        run: |
+          xbps-install -Suy
+          xbps-install -y libstdc++ base-chroot git
+
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Install build prerequisites
-        run: |
-          xbps-install -Suy || true
-          xbps-install -y base-chroot git
 
       - name: Clone void-packages
         run: |
