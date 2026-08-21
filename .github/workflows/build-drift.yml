@@ -29,7 +29,7 @@ jobs:
           xbps-install -Syu --repository=https://repo-default.voidlinux.org/current/ xbps
           xbps-install -Suyd --repository=https://repo-default.voidlinux.org/current/
           xbps-install -y --repository=https://repo-default.voidlinux.org/current/ \
-            git ca-certificates cmake ninja pkg-config tar xz \
+            git ca-certificates curl cmake ninja pkg-config tar xz \
             qt6-base-devel qt6-declarative-devel qt6-multimedia-devel \
             qt6-shadertools-devel qt6-tools ffmpeg6-devel \
             openssl-devel libzstd-devel soundtouch-devel
