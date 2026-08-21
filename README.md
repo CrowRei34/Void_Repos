@@ -1,5 +1,5 @@
 
-Repositorio de templates `xbps-src` y de un workflow de GitHub Actions para construir y publicar paquetes `.xbps`.
+Repositorio de templates `xbps-src` con estructura plana, inspirada en `cnr`.
 
 ## Templates incluidos
 
@@ -58,16 +58,6 @@ echo XBPS_ALLOW_RESTRICTED=yes >> etc/conf
 ```
 
 El paquete queda en `hostdir/binpkgs/`.
-
-## Instalar desde el repositorio publicado
-
-```bash
-sudo tee /etc/xbps.d/20-nk.conf >/dev/null <<EOF
-repository=https://github.com/CrowRei34/Void_Repos/releases/latest/download/
-EOF
-
-sudo xbps-install -Su uwuprite
-```
 
 ## Licencia
 
