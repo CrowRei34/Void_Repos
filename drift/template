@@ -6,7 +6,7 @@ revision=1
 archs="x86_64"
 
 short_desc="Beginner-friendly open-source video editor"
-maintainer="Orphaned <orphan@voidlinux.org>"
+maintainer="CrowRei34 <235182716+CrowRei34@users.noreply.github.com>"
 license="GPL-3.0-or-later"
 homepage="https://github.com/CutWire-Studios/Drift"
 

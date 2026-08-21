@@ -9,7 +9,7 @@ build_style=fetch
 hostmakedepends="squashfs-tools"
 nopie=yes
 short_desc="GTK frontend for yt-dlp"
-maintainer="Crow <crow@example.com>"
+maintainer="CrowRei34 <235182716+CrowRei34@users.noreply.github.com>"
 license="MIT"
 homepage="https://github.com/rockman6554/Parabolic"
 

@@ -6,7 +6,7 @@ restricted="Aseprite EULA does not allow redistribution"
 depends="libX11 libXcursor libXi libXrandr virtual?libGL fontconfig
  hicolor-icon-theme desktop-file-utils"
 short_desc="Aseprite pixel-art editor (precompiled build)"
-maintainer="Orphaned <orphan@voidlinux.org>"
+maintainer="CrowRei34 <235182716+CrowRei34@users.noreply.github.com>"
 license="custom:Aseprite EULA"
 homepage="https://github.com/CrowRei34/uwuprite"
 distfiles="https://github.com/CrowRei34/uwuprite/releases/download/continuous/uwuprite-x86_64.tar.xz"
