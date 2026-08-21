@@ -1,5 +1,3 @@
-# Template file for 'drift'
-
 pkgname=drift-editor
 version=0.3.0
 revision=1
@@ -10,16 +8,12 @@ maintainer="CrowRei34 <235182716+CrowRei34@users.noreply.github.com>"
 license="GPL-3.0-or-later"
 homepage="https://github.com/CutWire-Studios/Drift"
 
-# This tarball is compiled by this repository's Void-based GitHub workflow.
 hostmakedepends="tar xz"
 depends="qt6-base qt6-declarative qt6-multimedia ffmpeg zstd openssl soundtouch"
 nostrip=yes
 nodebug=yes
 nopie=yes
 noshlibprovides=yes
-# The Arch binary is linked against its repository's FFmpeg ABI, which may not
-# exist under the same SONAME in Void. Keep the declared dependencies above and
-# skip SONAME scanning for this precompiled executable.
 skiprdeps="/usr/bin/drift"
 
 distfiles="https://github.com/CrowRei34/Void_Repos/releases/download/continuous/drift-editor-x86_64.tar.xz"
