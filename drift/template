@@ -1,0 +1,31 @@
+# Template file for 'drift'
+
+pkgname=drift
+version=0.3.0
+revision=1
+archs="x86_64"
+
+short_desc="Beginner-friendly open-source video editor"
+maintainer="Orphaned <orphan@voidlinux.org>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/CutWire-Studios/Drift"
+
+# This is the official precompiled Arch package from Drift's GitHub release.
+# It is repackaged for XBPS; Drift itself is not compiled here.
+hostmakedepends="bsdtar"
+depends="qt6-base qt6-declarative qt6-multimedia ffmpeg zstd openssl soundtouch"
+nostrip=yes
+nodebug=yes
+nopie=yes
+noshlibprovides=yes
+
+distfiles="https://github.com/CutWire-Studios/Drift/releases/download/v${version}/drift-${version}-${revision}-x86_64.pkg.tar.zst"
+checksum=5d198167bdb9b32fe54aa2fdc7a193f4d2df15f3454be348c8d3103ab7196ae3
+
+do_install() {
+	local _pkg="${XBPS_SRCDISTDIR}/${pkgname}-${version}/drift-${version}-${revision}-x86_64.pkg.tar.zst"
+
+	bsdtar -xf "${_pkg}" -C "${DESTDIR}"
+	# Remove Arch package metadata; xbps-src generates its own metadata.
+	rm -f "${DESTDIR}/.BUILDINFO" "${DESTDIR}/.MTREE" "${DESTDIR}/.PKGINFO"
+}
