@@ -3,7 +3,7 @@ Repositorio de templates `xbps-src` con estructura plana, inspirada en `cnr`.
 
 ## Templates incluidos
 
-### drift
+### drift-editor
 
 `drift/template` repaqueta el paquete Arch precompilado oficial de
 [CutWire-Studios/Drift](https://github.com/CutWire-Studios/Drift). Incluye el
@@ -13,8 +13,8 @@ Drift en Void.
 Para probarlo:
 
 ```bash
-cp -r /ruta/a/Void_Repos/drift srcpkgs/
-./xbps-src pkg drift
+cp -r /ruta/a/Void_Repos/drift srcpkgs/drift-editor
+./xbps-src pkg drift-editor
 ```
 
 ### ani-cli
