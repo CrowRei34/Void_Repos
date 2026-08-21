@@ -15,7 +15,7 @@ Dependencias: `bash curl mpv yt-dlp ffmpeg fzf patch` y utilidades del sistema b
 
 ## Template de uwuprite
 
-También se incluye `srcpkgs/uwuprite/template` para empaquetar Aseprite en Void.
+También se incluye `uwuprite/template` para empaquetar Aseprite en Void.
 Este repositorio **no lo construye en GitHub Actions**: el binario precompilado lo
 genera y publica el repositorio [CrowRei34/uwuprite](https://github.com/CrowRei34/uwuprite).
 El template solo descarga ese artefacto, verifica su checksum y lo convierte en un
@@ -25,7 +25,7 @@ Para probarlo, activa los paquetes restringidos en `void-packages/etc/conf` y ej
 
 ```bash
 echo XBPS_ALLOW_RESTRICTED=yes >> etc/conf
-cp -r /ruta/a/Void_Repos/srcpkgs/uwuprite srcpkgs/
+cp -r /ruta/a/Void_Repos/uwuprite srcpkgs/
 ./xbps-src pkg uwuprite
 ```
 
@@ -35,7 +35,7 @@ cp -r /ruta/a/Void_Repos/srcpkgs/uwuprite srcpkgs/
 git clone https://github.com/void-linux/void-packages.git
 cd void-packages
 ./xbps-src binary-bootstrap
-cp -r /ruta/a/Void_Repos/srcpkgs/ani-cli srcpkgs/
+cp -r /ruta/a/Void_Repos/ani-cli srcpkgs/
 ./xbps-src pkg ani-cli
 ```
 

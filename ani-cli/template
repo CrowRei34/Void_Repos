@@ -1,22 +1,11 @@
 # Template file for 'ani-cli'
-#
-# ani-cli is a pure bash script (no compilation).
-# This template downloads the release assets (the script + the manpage) and
-# installs them into the package destdir.
+
 pkgname=ani-cli
 version=5.0
 revision=1
-# build_style=fetch: xbps-src downloads `distfiles` into the per-package
-# distdir and skips extraction; do_install() reads them from there.
 build_style=fetch
-# NOTE: not setting archs=noarch. xbps-src rejects noarch packages with
-# "cannot be built for x86_64" in this container/cross-ish context. ani-cli is
-# a pure bash script, so the resulting x86_64-marked binary runs everywhere.
 hostmakedepends=""
 makedepends=""
-# Runtime dependencies ani-cli cannot function without.
-# grep/sed/tr/cut/head/tail/wc/patch/tput/logger/uname come from the base system
-# (coreutils, util-linux, sed, grep, patch, ncurses).
 depends="bash curl mpv yt-dlp ffmpeg fzf patch"
 short_desc="Browse and play anime in your terminal"
 maintainer="Repositorios Nk <noreply@example.com>"
@@ -30,9 +19,7 @@ checksum="
  10650369e7d546c83d800b816aa2ed1190065dcbb0946ef7d697a111dcfd2dc3"
 nopie=yes
 
-do_build() {
-	:
-}
+do_build() { :; }
 
 do_install() {
 	local _d="${XBPS_SRCDISTDIR}/${pkgname}-${version}"

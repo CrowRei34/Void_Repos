@@ -4,7 +4,8 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'srcpkgs/**'
+      - 'ani-cli/**'
+      - 'uwuprite/**'
       - '.github/workflows/build-packages.yml'
   workflow_dispatch:
   schedule:
@@ -46,7 +47,7 @@ jobs:
       - name: Clone void-packages and copy templates
         run: |
           git clone --depth=1 https://github.com/void-linux/void-packages.git /tmp/void-packages
-          cp -r srcpkgs/ani-cli   /tmp/void-packages/srcpkgs/
+          cp -r ani-cli /tmp/void-packages/srcpkgs/
           chown -R builder:builder /tmp/void-packages
 
       - name: Bootstrap and build ani-cli

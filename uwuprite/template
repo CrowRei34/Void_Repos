@@ -3,18 +3,14 @@
 pkgname=uwuprite
 version=2026.08.21.17
 revision=1
-
 archs="x86_64"
 restricted="Aseprite EULA does not allow redistribution"
-
 depends="libX11 libXcursor libXi libXrandr virtual?libGL fontconfig
  hicolor-icon-theme desktop-file-utils"
-
 short_desc="Aseprite pixel-art editor (precompiled build)"
 maintainer="Orphaned <orphan@voidlinux.org>"
 license="custom:Aseprite EULA"
 homepage="https://github.com/CrowRei34/uwuprite"
-
 distfiles="https://github.com/CrowRei34/uwuprite/releases/download/continuous/uwuprite-x86_64.tar.xz"
 checksum=55bb65c6a7d57f6f3f515c9fd1f67deb66a2c4d90c79069546631aa31281edcb
 
