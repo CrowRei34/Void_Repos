@@ -1,0 +1,28 @@
+# Template file for 'ani-cli'
+
+pkgname=ani-cli
+version=5.0
+revision=1
+build_style=fetch
+hostmakedepends=""
+makedepends=""
+depends="bash curl mpv yt-dlp ffmpeg fzf patch"
+short_desc="Browse and play anime in your terminal"
+maintainer="Repositorios Nk <noreply@example.com>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/pystardust/ani-cli"
+distfiles="
+ https://github.com/pystardust/ani-cli/releases/download/v${version}/ani-cli
+ https://github.com/pystardust/ani-cli/releases/download/v${version}/ani-cli.1"
+checksum="
+ 985716cd7ca1a27031f2db8adc9d99addbf3eb56d25cb35f8ea23f93081476f8
+ 10650369e7d546c83d800b816aa2ed1190065dcbb0946ef7d697a111dcfd2dc3"
+nopie=yes
+
+do_build() { :; }
+
+do_install() {
+	local _d="${XBPS_SRCDISTDIR}/${pkgname}-${version}"
+	vinstall "${_d}/ani-cli" 755 usr/bin ani-cli
+	vman "${_d}/ani-cli.1"
+}

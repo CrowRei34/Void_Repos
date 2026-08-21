@@ -2,9 +2,24 @@
 
 Repositorio de templates `xbps-src` y de un workflow de GitHub Actions para construir y publicar paquetes `.xbps`.
 
-## Template incluido: uwuprite
+## Templates incluidos
 
-Se incluye `uwuprite/template` para empaquetar Aseprite en Void.
+### ani-cli
+
+El template `ani-cli/template` descarga directamente el script y la página de
+manual desde la release oficial de GitHub, verifica sus checksums y los instala.
+No requiere workflow propio.
+
+Para probarlo:
+
+```bash
+cp -r /ruta/a/Void_Repos/ani-cli srcpkgs/
+./xbps-src pkg ani-cli
+```
+
+### uwuprite
+
+También se incluye `uwuprite/template` para empaquetar Aseprite en Void.
 Este repositorio **no lo construye en GitHub Actions**: el binario precompilado lo
 genera y publica el repositorio [CrowRei34/uwuprite](https://github.com/CrowRei34/uwuprite).
 El template solo descarga ese artefacto, verifica su checksum y lo convierte en un
