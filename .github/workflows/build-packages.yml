@@ -48,6 +48,8 @@ jobs:
           git clone --depth=1 https://github.com/void-linux/void-packages.git /tmp/void-packages
           cp -r srcpkgs/ani-cli   /tmp/void-packages/srcpkgs/
           cp -r srcpkgs/uwuprite  /tmp/void-packages/srcpkgs/
+          # uwuprite contains the restricted Aseprite binary and EULA.
+          printf '%s\n' 'XBPS_ALLOW_RESTRICTED=yes' >> /tmp/void-packages/etc/conf
           chown -R builder:builder /tmp/void-packages
 
       - name: Bootstrap and build ani-cli
