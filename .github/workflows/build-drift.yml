@@ -39,6 +39,7 @@ jobs:
 
       - name: Create build user
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           groupadd -f xbuilder
           useradd -m -s /bin/bash -G xbuilder builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
