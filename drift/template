@@ -28,4 +28,7 @@ checksum=0b82ab8ea07b53360bd5b8059039cf80bef9e7ac0dab70203ac03ee38514ad90
 do_install() {
 	local _src="${XBPS_SRCDISTDIR}/${pkgname}-${version}/drift-editor-x86_64.tar.xz"
 	tar -xJf "${_src}" -C "${DESTDIR}"
+	mkdir -p "${DESTDIR}/usr/lib/drift"
+	mv "${DESTDIR}/usr/bin/drift" "${DESTDIR}/usr/lib/drift/drift-bin"
+	vinstall "${FILESDIR}/drift-wrapper" 755 usr/bin drift
 }
