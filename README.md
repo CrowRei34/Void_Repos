@@ -13,6 +13,22 @@ verifica sus checksums y los instala.
 Dependencias: `bash curl mpv yt-dlp ffmpeg fzf patch` y utilidades del sistema base.
 `patch` es necesario para la opción de autoactualización de ani-cli.
 
+## Template de uwuprite
+
+También se incluye `srcpkgs/uwuprite/template` para empaquetar Aseprite en Void.
+Este repositorio **no lo construye en GitHub Actions**: el binario precompilado lo
+genera y publica el repositorio [CrowRei34/uwuprite](https://github.com/CrowRei34/uwuprite).
+El template solo descarga ese artefacto, verifica su checksum y lo convierte en un
+paquete XBPS cuando se ejecuta localmente.
+
+Para probarlo, activa los paquetes restringidos en `void-packages/etc/conf` y ejecuta:
+
+```bash
+echo XBPS_ALLOW_RESTRICTED=yes >> etc/conf
+cp -r /ruta/a/Void_Repos/srcpkgs/uwuprite srcpkgs/
+./xbps-src pkg uwuprite
+```
+
 ## Construcción local
 
 ```bash
