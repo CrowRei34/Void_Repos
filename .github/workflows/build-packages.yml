@@ -47,7 +47,7 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/void-linux/void-packages.git /tmp/void-packages
           cp -r srcpkgs/ani-cli   /tmp/void-packages/srcpkgs/
-          cp -r srcpkgs/librewolf /tmp/void-packages/srcpkgs/
+          cp -r srcpkgs/uwuprite  /tmp/void-packages/srcpkgs/
           chown -R builder:builder /tmp/void-packages
 
       - name: Bootstrap and build ani-cli
@@ -55,9 +55,9 @@ jobs:
           su - builder -c "cd /tmp/void-packages && ./xbps-src binary-bootstrap"
           su - builder -c "cd /tmp/void-packages && ./xbps-src pkg ani-cli"
 
-      - name: Build librewolf
+      - name: Build uwuprite
         run: |
-          su - builder -c "cd /tmp/void-packages && ./xbps-src pkg librewolf"
+          su - builder -c "cd /tmp/void-packages && ./xbps-src pkg uwuprite"
 
       - name: Sign, index and export pubkey
         # Sign every .xbps with the private key (secret), then index the repo
@@ -189,7 +189,7 @@ jobs:
             sudo tee /etc/xbps.d/20-nk.conf >/dev/null <<EOF
             repository=${{ github.server_url }}/${{ github.repository }}/releases/latest/download/
             EOF
-            sudo xbps-install -Su ani-cli librewolf
+            sudo xbps-install -Su ani-cli uwuprite
             ```
           files: repo/*
           generate_release_notes: true

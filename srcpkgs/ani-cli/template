@@ -17,7 +17,7 @@ makedepends=""
 # Runtime dependencies ani-cli cannot function without.
 # grep/sed/tr/cut/head/tail/wc/patch/tput/logger/uname come from the base system
 # (coreutils, util-linux, sed, grep, patch, ncurses).
-depends="bash curl mpv yt-dlp ffmpeg fzf"
+depends="bash curl mpv yt-dlp ffmpeg fzf patch"
 short_desc="Browse and play anime in your terminal"
 maintainer="Repositorios Nk <noreply@example.com>"
 license="GPL-3.0-or-later"
