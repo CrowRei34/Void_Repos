@@ -20,6 +20,9 @@ jobs:
     steps:
       - name: Install build dependencies
         run: |
+          # The image can ship an older xbps than the current repository metadata.
+          # Update xbps first; otherwise xbps-autoupdate exits with code 16.
+          xbps-install -Syu --repository=https://repo-default.voidlinux.org/current/ xbps
           xbps-install -Suyd --repository=https://repo-default.voidlinux.org/current/
           xbps-install -y --repository=https://repo-default.voidlinux.org/current/ \
             git ca-certificates cmake ninja pkg-config tar xz \
