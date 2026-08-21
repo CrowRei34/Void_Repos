@@ -11,7 +11,7 @@ license="GPL-3.0-or-later"
 homepage="https://github.com/CutWire-Studios/Drift"
 
 # This tarball is compiled by this repository's Void-based GitHub workflow.
-hostmakedepends="tar"
+hostmakedepends="tar xz"
 depends="qt6-base qt6-declarative qt6-multimedia ffmpeg zstd openssl soundtouch"
 nostrip=yes
 nodebug=yes
