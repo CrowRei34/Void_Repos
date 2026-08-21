@@ -2,11 +2,8 @@ name: Build Drift
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 4 * * 1'
   push:
     paths:
-      - 'drift/**'
       - '.github/workflows/build-drift.yml'
 
 permissions:
