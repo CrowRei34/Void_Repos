@@ -9,6 +9,10 @@ on:
 permissions:
   contents: write
 
+env:
+  FFMPEG_REPO: CutWire-Studios/FFmpeg-Builds
+  FFMPEG_TAG: n7.1
+
 jobs:
   build:
     name: Build Drift (x86_64)
@@ -44,11 +48,22 @@ jobs:
           su - builder -c "git clone --depth=1 https://github.com/CutWire-Studios/Drift.git /tmp/Drift"
           chown -R builder:builder /tmp/Drift
 
+      - name: Fetch compatible FFmpeg
+        run: |
+          rm -rf /tmp/ffmpeg
+          mkdir -p /tmp/ffmpeg
+          curl -fsSL "https://github.com/${FFMPEG_REPO}/releases/download/${FFMPEG_TAG}/ffmpeg-${FFMPEG_TAG}-linux64-gpl-shared.tar.xz" \
+            | tar -xJf - --strip-components=1 -C /tmp/ffmpeg
+          chown -R builder:builder /tmp/ffmpeg
+
       - name: Configure and compile Drift
         run: |
-          su - builder -c 'cmake -S /tmp/Drift -B /tmp/Drift/build -G Ninja \
+          export PKG_CONFIG_PATH="/tmp/ffmpeg/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+          su - builder -c 'PKG_CONFIG_PATH=/tmp/ffmpeg/lib/pkgconfig cmake -S /tmp/Drift -B /tmp/Drift/build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCMAKE_PREFIX_PATH=/tmp/ffmpeg \
+            -DCMAKE_INSTALL_RPATH=/usr/lib/drift \
             -DDRIFT_BUNDLE_ONNXRUNTIME=OFF \
             -DDRIFT_UPDATE_FEED_URL='
           su - builder -c 'cmake --build /tmp/Drift/build --parallel'
@@ -58,6 +73,8 @@ jobs:
           rm -rf dist stage
           mkdir -p stage dist
           DESTDIR="$PWD/stage" cmake --install /tmp/Drift/build --prefix /usr --component drift
+          mkdir -p stage/usr/lib/drift
+          cp -a /tmp/ffmpeg/lib/*.so* stage/usr/lib/drift/
           tar -C stage -cJf dist/drift-editor-x86_64.tar.xz .
           sha256sum dist/drift-editor-x86_64.tar.xz
 
