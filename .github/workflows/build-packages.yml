@@ -184,7 +184,7 @@ jobs:
             sudo tee /etc/xbps.d/20-nk.conf >/dev/null <<EOF
             repository=${{ github.server_url }}/${{ github.repository }}/releases/latest/download/
             EOF
-            sudo xbps-install -Su ani-cli uwuprite
+            sudo xbps-install -Su ani-cli
             ```
           files: repo/*
           generate_release_notes: true
