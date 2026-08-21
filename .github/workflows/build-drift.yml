@@ -28,7 +28,7 @@ jobs:
             git ca-certificates cmake ninja pkg-config tar xz \
             qt6-base-devel qt6-declarative-devel qt6-multimedia-devel \
             qt6-shadertools-devel qt6-tools ffmpeg6-devel \
-            openssl-devel zstd-devel soundtouch-devel
+            openssl-devel libzstd-devel soundtouch-devel
 
       - name: Checkout repository
         uses: actions/checkout@v4
