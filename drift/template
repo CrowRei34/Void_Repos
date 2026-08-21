@@ -18,6 +18,10 @@ nostrip=yes
 nodebug=yes
 nopie=yes
 noshlibprovides=yes
+# The Arch binary is linked against its repository's FFmpeg ABI, which may not
+# exist under the same SONAME in Void. Keep the declared dependencies above and
+# skip XBPS's automatic SONAME guessing for this precompiled package.
+noverifyrdeps=yes
 
 distfiles="https://github.com/CutWire-Studios/Drift/releases/download/v${version}/drift-${version}-${revision}-x86_64.pkg.tar.zst"
 checksum=5d198167bdb9b32fe54aa2fdc7a193f4d2df15f3454be348c8d3103ab7196ae3
