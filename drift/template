@@ -23,7 +23,7 @@ noshlibprovides=yes
 skiprdeps="/usr/bin/drift"
 
 distfiles="https://github.com/CrowRei34/Void_Repos/releases/download/continuous/drift-editor-x86_64.tar.xz"
-checksum=SKIP
+checksum=0b82ab8ea07b53360bd5b8059039cf80bef9e7ac0dab70203ac03ee38514ad90
 
 do_install() {
 	local _src="${XBPS_SRCDISTDIR}/${pkgname}-${version}/drift-editor-x86_64.tar.xz"
