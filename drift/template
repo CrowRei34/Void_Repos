@@ -10,9 +10,8 @@ maintainer="Orphaned <orphan@voidlinux.org>"
 license="GPL-3.0-or-later"
 homepage="https://github.com/CutWire-Studios/Drift"
 
-# This is the official precompiled Arch package from Drift's GitHub release.
-# It is repackaged for XBPS; Drift itself is not compiled here.
-hostmakedepends="bsdtar"
+# This tarball is compiled by this repository's Void-based GitHub workflow.
+hostmakedepends="tar"
 depends="qt6-base qt6-declarative qt6-multimedia ffmpeg zstd openssl soundtouch"
 nostrip=yes
 nodebug=yes
@@ -23,13 +22,10 @@ noshlibprovides=yes
 # skip SONAME scanning for this precompiled executable.
 skiprdeps="/usr/bin/drift"
 
-distfiles="https://github.com/CutWire-Studios/Drift/releases/download/v${version}/drift-${version}-${revision}-x86_64.pkg.tar.zst"
-checksum=5d198167bdb9b32fe54aa2fdc7a193f4d2df15f3454be348c8d3103ab7196ae3
+distfiles="https://github.com/CrowRei34/Void_Repos/releases/download/continuous/drift-editor-x86_64.tar.xz"
+checksum=SKIP
 
 do_install() {
-	local _pkg="${XBPS_SRCDISTDIR}/${pkgname}-${version}/drift-${version}-${revision}-x86_64.pkg.tar.zst"
-
-	bsdtar -xf "${_pkg}" -C "${DESTDIR}"
-	# Remove Arch package metadata; xbps-src generates its own metadata.
-	rm -f "${DESTDIR}/.BUILDINFO" "${DESTDIR}/.MTREE" "${DESTDIR}/.PKGINFO"
+	local _src="${XBPS_SRCDISTDIR}/${pkgname}-${version}/drift-editor-x86_64.tar.xz"
+	tar -xJf "${_src}" -C "${DESTDIR}"
 }

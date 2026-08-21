@@ -5,10 +5,9 @@ Repositorio de templates `xbps-src` con estructura plana, inspirada en `cnr`.
 
 ### drift-editor
 
-`drift/template` repaqueta el paquete Arch precompilado oficial de
-[CutWire-Studios/Drift](https://github.com/CutWire-Studios/Drift). Incluye el
-ejecutable, efectos, plantillas, iconos, archivo `.desktop` y licencia; no compila
-Drift en Void.
+`drift/template` descarga el precompilado Void generado por el workflow de este
+repositorio a partir del código fuente de [CutWire-Studios/Drift](https://github.com/CutWire-Studios/Drift).
+Incluye el ejecutable, efectos, plantillas, iconos, archivo `.desktop` y licencia.
 
 Para probarlo:
 

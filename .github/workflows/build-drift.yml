@@ -1,0 +1,85 @@
+name: Build Drift
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
+  push:
+    paths:
+      - 'drift/**'
+      - '.github/workflows/build-drift.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Drift (x86_64)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 180
+    container:
+      image: ghcr.io/void-linux/void-mklive:20250116R1
+      options: --privileged
+    steps:
+      - name: Install build dependencies
+        run: |
+          xbps-install -Suyd --repository=https://repo-default.voidlinux.org/current/
+          xbps-install -y --repository=https://repo-default.voidlinux.org/current/ \
+            git ca-certificates cmake ninja pkg-config tar xz \
+            qt6-base-devel qt6-declarative-devel qt6-multimedia-devel \
+            qt6-shadertools-devel qt6-tools ffmpeg6-devel \
+            openssl-devel zstd-devel soundtouch-devel
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create build user
+        run: |
+          groupadd -f xbuilder
+          useradd -m -s /bin/bash -G xbuilder builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+
+      - name: Clone Drift
+        run: |
+          su - builder -c "git clone --depth=1 https://github.com/CutWire-Studios/Drift.git /tmp/Drift"
+          chown -R builder:builder /tmp/Drift
+
+      - name: Configure and compile Drift
+        run: |
+          su - builder -c 'cmake -S /tmp/Drift -B /tmp/Drift/build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DDRIFT_BUNDLE_ONNXRUNTIME=OFF \
+            -DDRIFT_UPDATE_FEED_URL='
+          su - builder -c 'cmake --build /tmp/Drift/build --parallel'
+
+      - name: Stage precompiled package
+        run: |
+          rm -rf dist stage
+          mkdir -p stage dist
+          DESTDIR="$PWD/stage" cmake --install /tmp/Drift/build --prefix /usr --component drift
+          tar -C stage -cJf dist/drift-editor-x86_64.tar.xz .
+          sha256sum dist/drift-editor-x86_64.tar.xz
+
+      - name: Publish continuous release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view continuous >/dev/null 2>&1; then
+            gh release create continuous --title "Drift continuous" \
+              --notes "Latest Void x86_64 build of Drift." --prerelease
+          fi
+          gh release upload continuous dist/drift-editor-x86_64.tar.xz --clobber
+
+      - name: Update template checksum
+        shell: bash
+        run: |
+          sha256=$(sha256sum dist/drift-editor-x86_64.tar.xz | awk '{print $1}')
+          sed -i "s/^checksum=.*/checksum=${sha256}/" drift/template
+          if ! git diff --quiet -- drift/template; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add drift/template
+            git commit -m "Update Drift precompiled checksum [skip ci]"
+            git push
+          fi
