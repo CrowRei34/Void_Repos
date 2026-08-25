@@ -104,9 +104,9 @@ artefacto continuo de Drift. Usa los SHA-256 publicados por GitHub y el índice
 Debian oficial de OpenAI, por lo que no necesita descargar los binarios para
 comprobar actualizaciones.
 
-El workflow `Update release-backed templates` ejecuta el mismo comando cada
-lunes y hace commit automático cuando encuentra una versión nueva. El workflow
-`Check templates` evita integrar versiones o checksums desactualizados.
+El workflow `Update release-backed templates` ejecuta el mismo comando todos
+los días y hace commit automático cuando encuentra una versión nueva. El
+workflow `Check templates` evita integrar versiones o checksums desactualizados.
 
 ## Licencia
 
