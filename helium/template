@@ -1,0 +1,35 @@
+# Template file for 'helium'
+pkgname=helium
+version=0.15.7.1
+revision=1
+archs="x86_64"
+build_style=fetch
+hostmakedepends="tar xz"
+depends="desktop-file-utils hicolor-icon-theme"
+short_desc="Private Chromium-based web browser (precompiled build)"
+maintainer="CrowRei34 <root@localhost>"
+license="GPL-3.0-or-later"
+homepage="https://github.com/imputnet/helium-linux"
+distfiles="https://github.com/imputnet/helium-linux/releases/download/${version}/helium-${version}-x86_64_linux.tar.xz"
+checksum=3102892cdebdfe0d51e3a638e000e8d54bca017c52daf2acabf5e503004efb9f
+nostrip=yes
+nodebug=yes
+noshlibprovides=yes
+nopie=yes
+
+do_install() {
+	local _archive="${XBPS_SRCDISTDIR}/${pkgname}-${version}/helium-${version}-x86_64_linux.tar.xz"
+
+	vmkdir usr/lib/helium
+	tar -xJf "${_archive}" -C "${DESTDIR}/usr/lib/helium" --strip-components=1
+
+	vmkdir usr/bin
+	ln -sf /usr/lib/helium/helium "${DESTDIR}/usr/bin/helium"
+
+	vmkdir usr/share/applications
+	ln -sf /usr/lib/helium/helium.desktop "${DESTDIR}/usr/share/applications/helium.desktop"
+
+	vmkdir usr/share/icons/hicolor/256x256/apps
+	ln -sf /usr/lib/helium/product_logo_256.png \
+		"${DESTDIR}/usr/share/icons/hicolor/256x256/apps/helium.png"
+}

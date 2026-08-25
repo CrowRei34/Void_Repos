@@ -1,10 +1,11 @@
+# Template file for 'drift-editor'
 pkgname=drift-editor
 version=0.3.0
 revision=1
 archs="x86_64"
 
 short_desc="Beginner-friendly open-source video editor"
-maintainer="CrowRei34 <235182716+CrowRei34@users.noreply.github.com>"
+maintainer="CrowRei34 <root@localhost>"
 license="GPL-3.0-or-later"
 homepage="https://github.com/CutWire-Studios/Drift"
 
@@ -24,5 +25,5 @@ do_install() {
 	tar -xJf "${_src}" -C "${DESTDIR}"
 	mkdir -p "${DESTDIR}/usr/lib/drift"
 	mv "${DESTDIR}/usr/bin/drift" "${DESTDIR}/usr/lib/drift/drift-bin"
-	vinstall "${FILESDIR}/drift-wrapper" 755 usr/bin drift
+	vbin "${FILESDIR}/drift-wrapper" drift
 }

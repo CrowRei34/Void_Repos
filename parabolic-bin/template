@@ -1,3 +1,4 @@
+# Template file for 'parabolic-bin'
 pkgname=parabolic-bin
 version=2026.5.2
 revision=1
@@ -7,12 +8,12 @@ build_style=fetch
 hostmakedepends="squashfs-tools"
 nopie=yes
 short_desc="GTK frontend for yt-dlp"
-maintainer="CrowRei34 <235182716+CrowRei34@users.noreply.github.com>"
+maintainer="CrowRei34 <root@localhost>"
 license="MIT"
 homepage="https://github.com/rockman6554/Parabolic"
 
 distfiles="https://github.com/rockman6554/Parabolic/releases/download/v${version}/Parabolic-${version}-x86_64.AppImage"
-checksum="30a9749119b5f9933739b3c2673eb58fd9be04773c8f9ac67485bc8f142b34b0"
+checksum=30a9749119b5f9933739b3c2673eb58fd9be04773c8f9ac67485bc8f142b34b0
 
 do_install() {
 	cd "$wrksrc"
@@ -30,15 +31,6 @@ exec /usr/lib/parabolic/AppRun "$@"
 EOF
 	chmod 755 "$DESTDIR/usr/bin/parabolic"
 
-	vmkdir usr/share/applications
-	cat > "$DESTDIR/usr/share/applications/org.nickvision.tubeconverter.desktop" <<'EOF'
-[Desktop Entry]
-Name=Parabolic
-Comment=Download web video and audio
-Exec=/usr/bin/parabolic %U
-Icon=org.nickvision.tubeconverter
-Terminal=false
-Type=Application
-Categories=AudioVideo;Network;
-EOF
+	vinstall "${FILESDIR}/org.nickvision.tubeconverter.desktop" 644 usr/share/applications
+	vlicense "${FILESDIR}/LICENSE"
 }

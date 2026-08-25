@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_dir"
+
+python3 scripts/update-templates.py
+
+for template in */template; do
+	sh -n "$template"
+done
+
+if command -v xlint >/dev/null 2>&1; then
+	for template in */template; do
+		xlint "$template"
+	done
+fi
+
+python3 scripts/update-templates.py --check
+printf '%s\n' "Templates updated and validated."

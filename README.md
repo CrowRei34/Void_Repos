@@ -3,6 +3,28 @@ Repositorio de templates `xbps-src` con estructura plana, inspirada en `cnr`.
 
 ## Templates incluidos
 
+### chatgpt
+
+Reempaqueta el `.deb` oficial de OpenAI para instalar la aplicación de
+ChatGPT/Codex y exponer los comandos `codex` y `codex-code-mode-host`. La
+versión y el SHA-256 se obtienen del índice Debian oficial de OpenAI.
+
+```bash
+cp -r /ruta/a/Void_Repos/chatgpt srcpkgs/
+./xbps-src pkg chatgpt
+```
+
+### helium
+
+Instala el binario x86_64 publicado por
+[imputnet/helium-linux](https://github.com/imputnet/helium-linux), junto con su
+entrada de escritorio e icono.
+
+```bash
+cp -r /ruta/a/Void_Repos/helium srcpkgs/
+./xbps-src pkg helium
+```
+
 ### parabolic-bin
 
 Template x86_64 que descarga el AppImage de Parabolic, lo extrae y crea el
@@ -67,6 +89,24 @@ echo XBPS_ALLOW_RESTRICTED=yes >> etc/conf
 ```
 
 El paquete queda en `hostdir/binpkgs/`.
+
+## Mantenimiento
+
+Un único comando consulta las releases, actualiza versiones y checksums y
+valida la sintaxis de todos los templates:
+
+```bash
+./scripts/maintain
+```
+
+El actualizador cubre ChatGPT, Helium, ani-cli, Parabolic, uwuprite y el
+artefacto continuo de Drift. Usa los SHA-256 publicados por GitHub y el índice
+Debian oficial de OpenAI, por lo que no necesita descargar los binarios para
+comprobar actualizaciones.
+
+El workflow `Update release-backed templates` ejecuta el mismo comando cada
+lunes y hace commit automático cuando encuentra una versión nueva. El workflow
+`Check templates` evita integrar versiones o checksums desactualizados.
 
 ## Licencia
 

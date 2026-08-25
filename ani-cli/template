@@ -1,12 +1,11 @@
+# Template file for 'ani-cli'
 pkgname=ani-cli
 version=5.0
 revision=1
 build_style=fetch
-hostmakedepends=""
-makedepends=""
 depends="bash curl mpv yt-dlp ffmpeg fzf patch"
 short_desc="Browse and play anime in your terminal"
-maintainer="CrowRei34 <235182716+CrowRei34@users.noreply.github.com>"
+maintainer="CrowRei34 <root@localhost>"
 license="GPL-3.0-or-later"
 homepage="https://github.com/pystardust/ani-cli"
 distfiles="
@@ -21,6 +20,6 @@ do_build() { :; }
 
 do_install() {
 	local _d="${XBPS_SRCDISTDIR}/${pkgname}-${version}"
-	vinstall "${_d}/ani-cli" 755 usr/bin ani-cli
+	vbin "${_d}/ani-cli" ani-cli
 	vman "${_d}/ani-cli.1"
 }

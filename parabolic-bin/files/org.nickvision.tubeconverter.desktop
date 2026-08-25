@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Parabolic
+Comment=Download web video and audio
+Exec=/usr/bin/parabolic %U
+Icon=org.nickvision.tubeconverter
+Terminal=false
+Type=Application
+Categories=AudioVideo;Network;
