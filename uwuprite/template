@@ -1,6 +1,6 @@
 # Template file for 'uwuprite'
 pkgname=uwuprite
-version=2026.09.05.082657
+version=2026.09.06.084644
 revision=1
 archs="x86_64"
 depends="libX11 libXcursor libXi libXrandr virtual?libGL fontconfig
@@ -10,7 +10,7 @@ maintainer="CrowRei34 <root@localhost>"
 license="custom:Aseprite EULA"
 homepage="https://github.com/CrowRei34/uwuprite"
 distfiles="https://github.com/CrowRei34/uwuprite/releases/download/continuous/uwuprite-x86_64.tar.xz"
-checksum=15b9ea9f30eafef536ffa0112b7c693723de40a63399d8da8231d396135e132e
+checksum=4a676101f3fc01d0764211219e149ec51b35f48c1082a21786b58490bd323609
 restricted="Aseprite EULA does not allow redistribution"
 
 do_install() {
