@@ -1,6 +1,6 @@
 # Template file for 'ani-cli'
 pkgname=ani-cli
-version=5.0
+version=5.1
 revision=1
 build_style=fetch
 depends="bash curl mpv yt-dlp ffmpeg fzf patch"
@@ -12,8 +12,8 @@ distfiles="
  https://github.com/pystardust/ani-cli/releases/download/v${version}/ani-cli
  https://github.com/pystardust/ani-cli/releases/download/v${version}/ani-cli.1"
 checksum="
- 985716cd7ca1a27031f2db8adc9d99addbf3eb56d25cb35f8ea23f93081476f8
- 10650369e7d546c83d800b816aa2ed1190065dcbb0946ef7d697a111dcfd2dc3"
+ f99a1dac807004becfb732a5518a0f2ded9dc08b467805abd03df5d580becd46
+ 6b3e693c4ac63cebf2c0b8002a104e4f1432a7dede676d803e9132704fd689a3"
 nopie=yes
 
 do_build() { :; }
