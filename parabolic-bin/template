@@ -1,6 +1,6 @@
 # Template file for 'parabolic-bin'
 pkgname=parabolic-bin
-version=2026.5.2
+version=2026.5.3
 revision=1
 archs="x86_64"
 
@@ -13,7 +13,7 @@ license="MIT"
 homepage="https://github.com/rockman6554/Parabolic"
 
 distfiles="https://github.com/rockman6554/Parabolic/releases/download/v${version}/Parabolic-${version}-x86_64.AppImage"
-checksum=30a9749119b5f9933739b3c2673eb58fd9be04773c8f9ac67485bc8f142b34b0
+checksum=da76d3e9e403b77c78b0c4a88dcd3d108c475cf6684795e7294d522dc9c817e6
 
 do_install() {
 	cd "$wrksrc"
