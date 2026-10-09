@@ -1,6 +1,6 @@
 # Template file for 'chatgpt'
 pkgname=chatgpt
-version=26.1002.52244
+version=26.1007.21434
 revision=1
 archs="x86_64"
 hostmakedepends="binutils tar xz zstd"
@@ -14,7 +14,7 @@ maintainer="CrowRei34 <root@localhost>"
 license="custom:Proprietary"
 homepage="https://developers.openai.com/codex/app"
 distfiles="https://persistent.oaistatic.com/codex-app-prod/linux/deb/pool/main/c/chatgpt/chatgpt_${version}_amd64.deb"
-checksum=9498e417131a278bce35bfff6275d252c0d332f17afc0313e0b782749f4d348a
+checksum=276b5341c3d74b261d3ad52106f7fa7edde06841e4767fe2a40cb54099b1f3ed
 nostrip=yes
 nodebug=yes
 noshlibprovides=yes
